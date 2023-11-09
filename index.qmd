@@ -1,0 +1,996 @@
+---
+title: "Métodos computacionales para las ciencias sociales"
+subtitle: "Procesamiento de texto III"
+format: 
+    revealjs:
+      auto-stretch: false
+      scrollable: true
+      link-external-newwindow: true
+css: style.css
+editor: source
+execute:
+  echo: false
+---
+
+```{r, echo=FALSE}
+source("code/helpers.R")
+library(kableExtra)
+```
+
+
+## ¿Dónde estamos?
+
+Sesión **17 de noviembre**
+
+Presentaciones finales: **24 de noviembre**
+
+Última sesión: **1 de diciembre**
+
+. . .
+
+**Elección 1: clase de hoy**
+
+. . .
+
+- Abordamos los contenidos de las cápsulas enviadas (vectorización de textos, tfidf, comparación de textos)
+
+. . .
+
+- Seguimos con la materia de hoy (*word embeddings*,  análisis de sentimiento)  
+
+. . .
+
+- Resolvemos dudas sobre los videos y luego seguimos con la materia
+
+. . .
+
+**Elección 2: sesión final**
+
+. . .
+
+- Usamos la clase completa para revisar tópicos introductorios sobre análisis geoespacial 
+
+. . .
+
+- Clases en el primer bloque y reflexión con comida (convivencia) en el segundo bloque (aproximadamente hasta las 17:15)
+
+
+## Contenidos de la clase
+
+- Word embeddings (spacy)
+- Combinando R y python: reticulate
+- Análisis de sentimiento (spacy)
+ 
+
+# ¿Por qué es relevante conocer herramientas para trabajar con texto? {.center background-color="aquamarine"}
+
+## Aplicaciones
+
+<img src="imagenes/ejemplos_nlp.png" width="800" />
+
+
+
+## Relevancia
+
+La cantidad de datos de texto crece día a día de manera veloz
+
+. . .
+
+Es imposible analizarlo todo de manera manual
+
+. . .
+
+Necesitamos herramientas automáticas
+
+. . .
+
+
+::: columns
+::: {.column width="50%"}
+<img src="imagenes/logo_twitter.jpg" width="300" />
+:::
+
+::: {.column width="50%"}
+<img src="imagenes/logo_wiki.png" width="200" />
+:::
+:::
+
+
+
+## Recordando...
+
+Sabemos que es conveniente convertir los textos en vectores  
+
+. . .
+
+Ya revisamos cómo hacerlo mediante la estrategia de bolsa de palabras (*bag of words*)
+
+. . .
+
+Hoy veremos una estrategia llamada *word embeddings* 
+
+
+## Motivación
+
+*lindo perro*
+
+*bonito can*
+
+. . .
+
+¿Cuál sería el valor de similitud coseno en un enfoque TFIDF?
+
+. . .
+
+
+<img src="imagenes/cosine.jpg" width="800" />
+
+  
+. . .
+
+**Necesitamos algo que capture el significado de las palabras**
+
+
+##  ¿Qué es *word embeddings*?
+
+Cualquier mecanismo que permita convertir palabras en vectores
+
+. . .
+
+**Idea clave**: El significado de una palabra está dada por su contexto 
+
+. . .
+
+La palabra **nación** está más cerca semánticamente a **país** que la palabra **hipopótamo** 
+
+. . .
+
+La palabra **animal** está asociada a la palabra **hipopótamo**
+
+. . .
+
+No es tan común que la palabra **nación** esté cerca de **animal**
+
+. . .
+
+Para un humano esto es trivial, pero para un computador es muy difícil
+
+. . .
+
+Podemos entrenar a una red neuronal para que aprenda vectores de palabras  
+
+## Artículo clave (Mikolov et al, 2013)
+
+Efficient Estimation of Word Representations in Vector Space
+
+
+<img src="imagenes/mikolov.png" width="700" />
+
+
+## Algunas intuiciones
+
+*La programación me ha permitido ahorrar muchas horas de trabajo*
+
+. . .
+
+window: **2**
+
+word: **ahorrar**
+
+**CBOW**
+
+ha permitido ______ muchas horas
+
+. . .
+
+**Skip-gram**
+
+
+____ _____ ahorrar _____ ______     
+
+
+
+## A más bajo nivel
+
+La capa de entrada corresponde a vectores one-hot
+
+```{python}
+print([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+print([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+print([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+print([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+```
+
+
+. . .
+
+La capa de salida es un vector one-hot
+
+```{python}
+print([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0])
+```
+
+
+. . .
+
+La capa oculta es una representación distribuida de cada palabra
+
+- Muchas veces se usa una capa oculta con 300 neuronas (perceptrones)
+
+## Entrenamiento
+
+Podemos tener muchos pares de palabra-contexto
+
+. . .
+
+- La naranja y la **manzana** son frutas
+
+- La **manzana** es roja
+
+- Ella mordió la **manzana** envenenada que le dio la bruja
+
+- Decidieron morder la **manzana** del conocimiento
+
+- Esa es una **manzana** podrida dentro del grupo
+
+- Me como, al menos, una **manzana** al día
+
+. . .
+
+**Entrenamos una red para que aprenda una representación de manzana**
+
+
+
+
+
+## Algunos recursos
+
+Para una aproximación más formal, revisen las clases de [Jorge Pérez](https://www.youtube.com/@JorgePerez-pt3qg)
+
+- Algo de álgebra lineal
+- Un poco de cálculo (límites, derivadas)
+
+
+. . .
+
+
+Para una entrada más intuitiva vean [dot csv](https://www.youtube.com/watch?v=Tg1MjMIVArc)
+
+## Usaremos spacy de python
+
+::: panel-tabset
+
+## spacy
+
+Vamos a cargar vectores de una librería de python llamada [spacy](https://spacy.io/)  
+
+![](imagenes/spacy.png){fig-align="center" width="420px"}
+
+![](imagenes/logo_python.png){fig-align="center" width="130px"}
+
+
+## opciones
+
+
+**Opción 1: Usar python nativamente (más fácil)** 
+
+
+**Opción 2: Correr python desde un entorno R** 
+
+:::
+
+
+
+## Opción 1: IDE especializado
+
+![](imagenes/ides.png){fig-align="center" width="800"}
+
+
+
+## Opción 2: reticulate
+
+::: panel-tabset
+
+## Instalación
+
+
+![](imagenes/reticulate.png){fig-align="center" width="460px"}
+
+```{r, eval=FALSE, echo=TRUE}
+install.packages("reticulate")
+library(reticulate)
+```
+
+## Ambiente virtual
+
+```{r, echo=FALSE}
+poner_nombres <- function(vector) {
+  names(vector) <- paste0("dim", 1:length(vector))
+  return(vector)
+}
+```
+
+
+```{r, eval=FALSE, echo=TRUE}
+library(reticulate)
+virtualenv_create("taller-nlp") # crear un ambiente virtual
+use_virtualenv("taller-nlp") # activar un ambiente espećifico
+virtualenv_install("taller-nlp", "spacy") # instalar spacy
+virtualenv_install("taller-nlp", "es_core_news_sm") # descargar modelo small con 96 dimensiones
+
+spacy <-  reticulate::import("spacy") # cargar spacy en R
+nlp =  spacy$load("es_core_news_sm") # cargar modelo pequeño con 96 dimensiones
+
+```
+
+```{r, echo=FALSE}
+library(tidyverse)
+library(reticulate)
+reticulate::use_virtualenv(paste0(getwd(), "/venv") , required = T )
+spacy <-  reticulate::import("spacy")
+nlp =  spacy$load("es_core_news_lg")
+doc = nlp("limón pera manzana sandía melón rojo azul amarillo verde perro gato ratón tigre elefante")
+
+# Crear vectores para cada una de las palabras
+indices <- 0:(length(doc) - 1)
+vectores <- map(indices,  ~doc[.x]$vector ) %>% 
+  map(poner_nombres) %>% 
+  bind_rows()
+
+```
+
+
+## Procesar
+
+```{r, echo=TRUE}
+doc = nlp("limón pera manzana sandía melón rojo azul amarillo verde perro gato ratón tigre elefante")
+
+# Crear vectores para cada una de las palabras
+indices <- 0:(length(doc) - 1)
+vectores <- map(indices,  ~doc[.x]$vector ) %>% 
+  map(poner_nombres) %>% 
+  bind_rows()
+
+```
+
+
+## Resultado
+
+Cada palabra está representada por un vector de 300 dimensiones (elementos)
+
+```{r, echo=TRUE}
+dim(vectores)
+print(unlist(vectores[1, ]))
+
+
+```
+
+
+:::
+
+
+
+
+## Word embeddings
+
+
+```{r pca, echo=FALSE, fig.height=5, fig.align="center"}
+
+library(stats)
+resultado <- prcomp(vectores, scale = TRUE)
+
+df <-  data.frame(dim1 = resultado$x[, 1], dim2 = resultado$x[, 2]) %>% 
+  mutate(objeto = c("fruta", "fruta", "fruta", "fruta", "fruta", "color", "color", "color", "color", "animal",
+                    "animal", "animal", "animal", "animal" ),
+         word = c("limón", "pera", "manzana", "sandía", "melón", "rojo", "azul", "amarillo", "verde", "perro",
+                  "gato", "ratón", "tigre", "elefante")
+         )
+df %>% 
+  ggplot(aes(dim1, dim2, color = objeto, label = word)) +
+  geom_point() +
+  scale_color_manual(values = c("fruta" = "green", "color" = "blue", "animal" = "red")) +
+  geom_text() +
+  theme_bw()
+
+
+
+df_3d <-  data.frame(dim1 = resultado$x[, 1], dim2 = resultado$x[, 2], dim3 = resultado$x[, 3]) %>% 
+  mutate(objeto = c("fruta", "fruta", "fruta", "fruta", "fruta", "color", "color", "color", "color", "animal",
+                    "animal", "animal", "animal", "animal" ),
+         word = c("limón", "pera", "manzana", "sandía", "melón", "rojo", "azul", "amarillo", "verde", "perro",
+                  "gato", "ratón", "tigre", "elefante")
+         )
+
+
+```
+. . .
+
+```{r, echo=FALSE}
+pal <- c("red", "blue", "green")
+
+library(plotly)
+fig <- plot_ly(df_3d, x = ~dim1, y = ~dim2, z = ~dim3, color = ~objeto, text = ~word, colors = pal)
+fig <- fig %>% add_markers()
+fig <- fig %>% layout(scene = list(xaxis = list(title = 'dim1'),
+                     yaxis = list(title = 'dim2'),
+                     zaxis = list(title = 'dim3'))) 
+
+fig
+
+```
+
+## Reticulate: más ejemplos
+
+::: panel-tabset
+
+## instalando paquetes
+
+```{r, eval=FALSE, echo=TRUE}
+reticulate::virtualenv_install(paste0(getwd(), "/venv"), "pandas")
+```
+
+
+## dataframe
+
+```{python, echo = T}
+import pandas as pd
+df_python =  pd.DataFrame({"var1": [1, 2, 3], "var2": [4, 5, 6]}  )
+print(df_python)
+```
+
+```{r, eval=TRUE, echo=TRUE}
+df_r =  py$df_python
+print(df_r)
+
+
+
+```
+
+## función
+
+```{python, echo = TRUE}
+def sumar(x, y):
+  return x + y
+```
+
+```{r, echo=TRUE}
+sumar <-  py$sumar
+sumar(3, 5)
+
+```
+
+
+:::
+
+
+## Usemos los vectores
+
+Usaremos los vectores de *spacy* para procesar las noticias (videos enviados)
+
+. . .
+
+**Plan:** 
+
+1. Separar todas las noticias en oraciones
+2. Convertir las oraciones en vectores
+3. Buscar algunos tópicos, utilizando similitud coseno
+
+
+## Aplicando lo aprendido
+
+```{r, echo=TRUE}
+library(quanteda)
+data <- read_csv("data/data_larazon_publico_v2.csv")
+
+set.seed(123)
+corpus <- data %>% 
+  select(text = cuerpo) %>% 
+  sample_frac(0.2) %>% 
+  corpus()
+
+tokens <- corpus %>% 
+  tokens()
+
+dfm <- tokens %>% 
+  dfm()  
+
+
+```
+
+## Preprocesamiento
+
+```{r separar textos, eval=T, echo=TRUE}
+# Esto es un listado de oraciones
+oraciones_editadas <- map(corpus, ~split_and_edit(.x ) )  %>% 
+  flatten()  # desanclarar oraciones de la noticia
+
+# Sin editar, para usar cuando miremos los datos
+oraciones <- map(corpus, ~split_text(.x)) %>% 
+  flatten()
+
+```
+
+```{r mostrar oraciones, echo=FALSE}
+data.frame(oraciones = oraciones_editadas[1:2] %>% unlist()) %>% 
+  kbl() %>% 
+  kable_styling()
+
+```
+
+
+## Usando los vectores de spacy
+
+Debido a la remoción de palabras, pueden haber quedado algunas oraciones vacías
+
+```{r editar datos, echo=TRUE}
+# Eliminamos las oraciones sin tokens
+texto_vacio <- oraciones_editadas == ""
+oraciones_editadas <- oraciones_editadas[!texto_vacio]
+oraciones <- oraciones[!texto_vacio]
+
+```
+
+. . .
+
+
+Haremos una muestra de 50.000 oraciones
+
+```{r muestra, echo=TRUE}
+set.seed(123)
+# Números aleatorios entre 1 y 311176
+vector_muestra <-  sample(x = 1:length(oraciones_editadas), 50000, replace = FALSE)
+
+# Hacemos la selección en las oraciones editadas y no editadas
+oraciones_muestra <- oraciones_editadas[vector_muestra]
+oraciones_muestra_originales <- oraciones[vector_muestra]
+
+```
+
+## Pasar de texto a vector 
+
+::: panel-tabset
+
+## texto
+
+```{r, echo=TRUE}
+oraciones_muestra[[1]]
+
+```
+
+
+Esto es lo que sabemos hasta ahora
+
+```{r, echo=TRUE}
+doc = nlp(oraciones_muestra[[1]])
+vector_psoe <-  doc[[1]]$vector
+
+```
+
+
+
+## pregunta
+
+Tenemos un vector para cada palabra
+
+¿Cómo convertir un texto en vector?
+
+![](https://media.giphy.com/media/UP9ItQNj52DsM3e29m/giphy.gif){fig-align="center" width="200px"}
+
+
+
+. . .
+
+Una manera es calcular la media de cada una de las 300 dimensiones
+
+## media
+
+```{r, echo=TRUE}
+texto <-  oraciones_muestra[[1]]
+var_names <- paste0("dim", 1:300)
+doc = nlp(texto)  
+indices <- 0:(length(doc) - 1)
+  
+vectores <- map(indices,  ~doc[.x]$vector ) %>% 
+  discard(function(x) sum(x) == 0 ) %>% # sacar las palabras no incluidas en el vocabulario
+  map(set_names, var_names) %>% 
+  bind_rows()
+  
+representacion <-  map(vectores, mean)
+
+```
+
+Encapsulamos todo en una función llamada `create_representation`
+
+:::
+
+## Procesamiento
+
+La función `create_representation` convierte un texto en un vector 
+
+. . .
+
+Devuelve una lista con 3 elementos
+
+`return(list(representacion, texto, length(indices)) )`
+
+
+. . .
+
+**Advertencia**: Este proceso puede tomar varios minutos
+
+```{r muestreo textos, eval=FALSE, echo=TRUE}
+representations <- map(oraciones_muestra, create_representation) 
+saveRDS(representations, "data/vector_representation_sample.rds")
+```
+
+
+## Cargar información
+
+
+```{r, echo=TRUE}
+representations <- readRDS("data/vector_representation_sample.rds")
+print(representations[[1]][1] %>% unlist() %>% unname() %>% as.numeric())
+print(representations[[1]][2])
+
+```
+
+
+## Un poco más de procesamiento
+
+```{r cargar representaciones, echo=TRUE}
+
+# Agregar oraciones originales a la lista
+representations <- map2(oraciones_muestra_originales, representations, ~append(.y, .x))
+
+# Eliminar textos sin representación y con menos de 4 palabras
+representations2 <- representations %>%
+  keep(~!is_empty(.x[[1]])) %>% # sacar las oraciones sin representación  
+  keep(~.x[3] > 4) # sacar textos con pocas palabras
+
+# Guardamos los vectores
+vectores <- representations2 %>% 
+  map(1) %>% 
+  map(~unlist(unname(.x)))  
+
+# Guardamos las oraciones editadas
+textos <- representations2 %>% 
+  map(2) 
+
+# Guardamos las oraciones editadas
+textos_originales <- representations2 %>% 
+  map(4) 
+
+
+```
+
+
+## Buscando tópicos
+
+
+::: panel-tabset
+
+## función
+
+```{r, echo=TRUE, eval=FALSE}
+function(vectores, texto, n = 3, lista_textos ) {
+  vector <-  create_representation(texto) # ya la conocemos
+  vector <- vector[[1]] %>% unname() %>% unlist() # simplificar lista
+  similitud <-  map_dbl(vectores, ~coop::cosine(vector, .x ) ) # comparar cada vector contra todos los demás
+  top <- order(similitud, decreasing=T)[1:n] # ordenar de mayor a menor similitud
+  return(lista_textos[top])
+}
+```
+
+## tópicos
+
+```{r ejemplo buscar concepto , eval=FALSE, echo=TRUE}
+encontrar_mas_parecidos(vectores, "elecciones congreso nacional", 5, lista_textos =  textos_originales)
+encontrar_mas_parecidos(vectores, "crecimiento económico", 5, lista_textos =  textos_originales)
+encontrar_mas_parecidos(vectores, "inmigrantes musulmanes", 5, lista_textos =  textos_originales)
+encontrar_mas_parecidos(vectores, "desigualdad económica", 5, lista_textos =  textos_originales)
+
+encontrar_mas_parecidos(vectores, "ministerio sanidad", lista_textos =  textos_originales)
+encontrar_mas_parecidos(vectores, "inflación", 5, lista_textos =  textos_originales)
+encontrar_mas_parecidos(vectores, "terrorismo", 5, lista_textos =  textos_originales)
+encontrar_mas_parecidos(vectores, "violencia género", 5, lista_textos =  textos_originales)
+
+
+
+```
+
+
+:::
+
+## Resultados
+
+::: panel-tabset
+
+
+## elecciones
+```{r congreso, echo=FALSE}
+x <- encontrar_mas_parecidos(vectores, "elecciones congreso nacional", 5, lista_textos =  textos_originales)
+crear_tabla(x)
+```
+
+
+## crecimiento
+
+```{r crecimiento, echo=FALSE}
+x <- encontrar_mas_parecidos(vectores, "crecimiento económico", 5, lista_textos =  textos_originales)
+crear_tabla(x)
+```
+
+
+## inmigrantes
+```{r inmigrantes, echo=FALSE}
+x <- encontrar_mas_parecidos(vectores, "inmigrantes musulmanes", 5, lista_textos =  textos_originales)
+crear_tabla(x)
+```
+
+## desigualdad
+```{r desigualdad, echo=FALSE}
+x <- encontrar_mas_parecidos(vectores, "desigualdad económica", 5, lista_textos =  textos_originales)
+crear_tabla(x)
+```
+
+## sanidad
+```{r ministerio, echo=FALSE}
+x <- encontrar_mas_parecidos(vectores, "ministerio sanidad",  5, lista_textos =  textos_originales)
+crear_tabla(x)
+```
+
+## inflación
+```{r inflacion, echo=FALSE}
+x <- encontrar_mas_parecidos(vectores, "inflación", 5, lista_textos =  textos_originales )
+crear_tabla(x)
+```
+
+## terrorismo
+```{r terrorismo, echo=FALSE}
+x <- encontrar_mas_parecidos(vectores, "terrorismo", 5, lista_textos =  textos_originales)
+crear_tabla(x)
+```
+
+## género
+```{r violencia genero, echo=FALSE}
+x <- encontrar_mas_parecidos(vectores, "violencia género", 5, lista_textos =  textos_originales)
+crear_tabla(x)
+```
+
+:::
+
+## Nuestros propios embeddings
+
+
+Los modelos de spacy han sido entrenados de manera muy general
+
+. . .
+
+A veces, podemos tener corpus muy específicos (temas científicos, dialectos, etc.)  
+
+. . .
+
+Podemos entrenar nuestros embeddings dentro de R
+
+**warning**: esto puede tardar bastante 
+
+. . .
+
+```{r, eval=FALSE, echo=TRUE}
+library(word2vec)
+
+x <- data$cuerpo # noticias
+
+# Generar embeddings de 300 dimensiones
+model <- word2vec(x = x, dim = 300, iter = 20, min_count = 5, threads = 16)
+
+# Crear una matriz
+embedding <- as.matrix(model)
+
+# Buscar palabras más cercanas 
+lookslike <- predict(model, c("democracia", "violencia", "presidente", "dictadura", "rojo", "rey"), 
+                     type = "nearest", top_n = 5)
+
+```
+
+
+```{r cargar modelo, echo=FALSE}
+model <- word2vec::read.word2vec("data/news_vectors_300.bin")
+
+cercanos <- predict(model, c("inmigración", "democracia", "violencia", "presidente", "dictadura", "rey" ), 
+                     type = "nearest", top_n = 5)
+
+# Crear una matriz
+embedding <- as.matrix(model)
+
+cercanos %>% 
+  bind_rows() %>% 
+  kbl() %>%
+  kable_styling(font_size = 18)
+
+```
+
+## Análisis de sentimiento: breve historia
+
+BERT: Bidirectional Encoder Representations from Transformers
+
+. . .
+
+RNN: Recurrent Neural Network
+
+![](imagenes/rnn.png){fig-align="center" width="800"}
+
+
+
+**Problema de memoria de largo plazo**
+
+
+##  Análisis de sentimiento: breve historia
+
+
+*Mi tía tiene una casa cerca del barrio Bellavista. Ella siempre se queja del ruido, lo que la ha convertido en la señora gruñona de la cuadra*
+
+. . .
+
+Término técnico: desvanecimiento del gradiente
+
+. . .
+
+**Innovaciones con recurrencia**
+
+- GRU: Gated Recurrent Unit 
+- LSTM: Long Short Term Memory
+
+
+. . .
+
+**Mecanismo de atención (utiliza *embeddings*)**
+
+- Puedo calcular cuál es la cercanía entre palabras y considerar eso en el entrenamiento  
+
+. . .
+
+*Attention is all you need* (2017)
+
+- Eliminan la recurrencia y solo usan mecanismo de atención
+- Esto se puede paralelizar
+- Aumenta la cantidad de datos
+
+
+## Análisis de sentimiento
+
+Retomemos nuestros textos sobre la ETA 
+
+Trataremos de ver si los extractos tienen un "sentimiento" positivo o negativo 
+
+Usaremos un modelo disponible en [huggingface](https://huggingface.co/pysentimiento/robertuito-sentiment-analysis)
+
+Empresa que pone a disposición transformers
+
+
+![](imagenes/huggingface.png){fig-align="center" width="420px"}
+
+
+## Huggingface
+
+
+```{r, eval=FALSE, echo=TRUE}
+reticulate::py_install("transformers", pip = TRUE) # librería para los modelos
+reticulate::py_install(c("torch", "sentencepiece"), pip = TRUE) # backend para el manejo de matrices
+```
+
+
+Cargamos la librería y un modelo entrenado con datos en español
+
+```{r, echo=TRUE}
+transformers <- reticulate::import("transformers")
+classifier <- transformers$pipeline(task = "text-classification",
+                                    model = "pysentimiento/robertuito-sentiment-analysis" )
+
+```
+
+## Ejemplo básico
+
+```{r, echo=TRUE}
+
+text <- c("Es lo mejor que me ha pasado en el último tiempo")
+classifier(text)
+
+text <- c("Es el peor producto que he comprado en mi vida")
+classifier(text)
+
+```
+
+## Menciones a ETA con quanteda
+
+
+```{r, echo=TRUE}
+menciones_eta <- tokens %>% 
+  kwic( pattern = "eta",  window = 7)  
+
+```
+
+```{r}
+menciones_eta %>% 
+  DT::datatable(rownames = F, 
+                options = list(
+                  pageLength = 3,
+                  dom = "rtip",
+                  headerCallback = DT::JS(
+                    "function(thead) {",
+                    "  $(thead).css('font-size', '0.8em');",
+                    "}"
+                  ))
+                )%>% 
+  DT::formatStyle(columns = 1:ncol(menciones_eta), fontSize = '70%', backgroundSize = '30%')
+
+```
+
+## Predicciones con huggingface
+
+```{r, echo=TRUE}
+
+# Armar dataframe con los primeros 10 extractos
+data <- data.frame(pre  = menciones_eta$pre, post = menciones_eta$post ) %>% 
+  slice(1:10) %>% 
+  mutate(text = paste(pre, post)) %>% 
+  select(text)
+
+# Predecir sentimiento para cada uno de los textos
+out <-  map(data$text, classifier)
+
+# Extraer la etiqueta de cada predicción
+labels <- flatten(out) %>%
+  map_chr(1)
+
+# Extraer probabilidad de cada predicción
+prob <- flatten(out) %>%
+  map_dbl(2)
+
+# Añadir columnas a data frame
+data <- data %>% 
+  mutate(sentiment = labels,
+         prob = prob)
+
+```
+
+
+
+
+## Predicciones
+
+```{r, echo=FALSE}
+data %>% 
+  kbl() %>% 
+  kable_styling(font_size = 20)
+  
+```
+
+
+## Comentarios al cierre
+
+**En la clase revisamos:**
+
+- *Word Embeddings* (spacy)
+- Clasificador de sentimientos (transformers)
+
+. . .
+
+`R` cuenta con varias herramientas para trabajar con datos de texto
+
+. . .
+
+* Las herramientas más populares en la actualidad están disponibles en *Python*
+  + spacy
+  + transformers
+  + gensim
+  + otras
+
+. . .
+
+- Podemos articular ambos lenguajes a través de `reticulate` 
+
+
+
+
+# Métodos computacionales para las ciencias sociales {.center background-color="aquamarine"}
