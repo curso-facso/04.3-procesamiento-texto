@@ -354,6 +354,28 @@ vectores <- map(indices,  ~doc[.x]$vector ) %>%
 ```
 
 
+## python
+
+```{python, echo = TRUE}
+# Cargar modelo
+import spacy
+import pandas as pd
+nlp =  spacy.load("es_core_news_lg")
+doc = nlp("limón pera manzana sandía melón rojo azul amarillo verde perro gato ratón tigre elefante")
+
+# Extraer vectores
+vectors = []
+for tok in doc:
+  vectors.append(tok.vector)
+
+# Convertir a dataframe
+vectors_df =  pd.DataFrame(vectors)
+
+
+
+```
+
+
 ## Resultado
 
 Cada palabra está representada por un vector de 300 dimensiones (elementos)
@@ -967,7 +989,7 @@ data %>%
 ```
 
 
-## Comentarios al cierre
+## Algunos comentarios
 
 **En la clase revisamos:**
 
