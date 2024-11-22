@@ -15,44 +15,13 @@ execute:
 ```{r, echo=FALSE}
 source("code/helpers.R")
 library(kableExtra)
+library(reticulate)
+library(tidyverse)
+
+use_virtualenv("taller-nlp") # activar un ambiente espećifico
+
 ```
 
-
-## ¿Dónde estamos?
-
-Sesión **17 de noviembre**
-
-Presentaciones finales: **24 de noviembre**
-
-Última sesión: **1 de diciembre**
-
-. . .
-
-**Elección 1: clase de hoy**
-
-. . .
-
-- Abordamos los contenidos de las cápsulas enviadas (vectorización de textos, tfidf, comparación de textos)
-
-. . .
-
-- Seguimos con la materia de hoy (*word embeddings*,  análisis de sentimiento)  
-
-. . .
-
-- Resolvemos dudas sobre los videos y luego seguimos con la materia
-
-. . .
-
-**Elección 2: sesión final**
-
-. . .
-
-- Usamos la clase completa para revisar tópicos introductorios sobre análisis geoespacial 
-
-. . .
-
-- Clases en el primer bloque y reflexión con comida (convivencia) en el segundo bloque (aproximadamente hasta las 17:15)
 
 
 ## Contenidos de la clase
@@ -61,40 +30,6 @@ Presentaciones finales: **24 de noviembre**
 - Combinando R y python: reticulate
 - Análisis de sentimiento (spacy)
  
-
-# ¿Por qué es relevante conocer herramientas para trabajar con texto? {.center background-color="aquamarine"}
-
-## Aplicaciones
-
-<img src="imagenes/ejemplos_nlp.png" width="800" />
-
-
-
-## Relevancia
-
-La cantidad de datos de texto crece día a día de manera veloz
-
-. . .
-
-Es imposible analizarlo todo de manera manual
-
-. . .
-
-Necesitamos herramientas automáticas
-
-. . .
-
-
-::: columns
-::: {.column width="50%"}
-<img src="imagenes/logo_twitter.jpg" width="300" />
-:::
-
-::: {.column width="50%"}
-<img src="imagenes/logo_wiki.png" width="200" />
-:::
-:::
-
 
 
 ## Recordando...
@@ -162,7 +97,6 @@ Podemos entrenar a una red neuronal para que aprenda vectores de palabras
 ## Artículo clave (Mikolov et al, 2013)
 
 Efficient Estimation of Word Representations in Vector Space
-
 
 <img src="imagenes/mikolov.png" width="700" />
 
@@ -303,6 +237,34 @@ library(reticulate)
 
 ## Ambiente virtual
 
+
+Si todo sale bien, esto debería ser suficiente
+
+
+
+```{r, eval=FALSE, echo=TRUE}
+library(reticulate)
+virtualenv_create("taller-nlp", version = "3.10.12" , packages = F) # crear un ambiente virtual
+use_virtualenv("taller-nlp") # activar un ambiente espećifico
+virtualenv_install("taller-nlp", "numpy") # instalar numpy
+virtualenv_install("taller-nlp", "spacy") # instalar spacy
+py_run_string("import os; os.system('python -m spacy download es_core_news_lg')") # instalar modelo grande de embeddings
+spacy <-  reticulate::import("spacy" ) # cargar spacy en R
+nlp =  spacy$load("es_core_news_lg") # cargar modelo pequeño con 96 dimensiones
+
+```
+
+## Posibles problemas
+
+Reticulate no conoce la ruta del ejecutable de Python
+
+Versiones incompatibles de librerías de Python
+
+Otras cosas misteriosas
+
+
+## Procesar
+
 ```{r, echo=FALSE}
 poner_nombres <- function(vector) {
   names(vector) <- paste0("dim", 1:length(vector))
@@ -311,38 +273,13 @@ poner_nombres <- function(vector) {
 ```
 
 
-```{r, eval=FALSE, echo=TRUE}
-library(reticulate)
-virtualenv_create("taller-nlp") # crear un ambiente virtual
-use_virtualenv("taller-nlp") # activar un ambiente espećifico
-virtualenv_install("taller-nlp", "spacy") # instalar spacy
-virtualenv_install("taller-nlp", "es_core_news_sm") # descargar modelo small con 96 dimensiones
-
-spacy <-  reticulate::import("spacy") # cargar spacy en R
-nlp =  spacy$load("es_core_news_sm") # cargar modelo pequeño con 96 dimensiones
-
-```
-
-```{r, echo=FALSE}
-library(tidyverse)
-library(reticulate)
-reticulate::use_virtualenv(paste0(getwd(), "/venv") , required = T )
-spacy <-  reticulate::import("spacy")
-nlp =  spacy$load("es_core_news_lg")
-doc = nlp("limón pera manzana sandía melón rojo azul amarillo verde perro gato ratón tigre elefante")
-
-# Crear vectores para cada una de las palabras
-indices <- 0:(length(doc) - 1)
-vectores <- map(indices,  ~doc[.x]$vector ) %>% 
-  map(poner_nombres) %>% 
-  bind_rows()
-
-```
-
-
-## Procesar
 
 ```{r, echo=TRUE}
+library(tidyverse)
+use_virtualenv("taller-nlp") # activar un ambiente espećifico
+spacy <-  reticulate::import("spacy" ) # cargar spacy en R
+nlp =  spacy$load("es_core_news_lg") # cargar modelo pequeño con 96 dimensiones
+
 doc = nlp("limón pera manzana sandía melón rojo azul amarillo verde perro gato ratón tigre elefante")
 
 # Crear vectores para cada una de las palabras
@@ -356,7 +293,7 @@ vectores <- map(indices,  ~doc[.x]$vector ) %>%
 
 ## python
 
-```{python, echo = TRUE}
+```{python, echo = TRUE, eval = TRUE}
 # Cargar modelo
 import spacy
 import pandas as pd
@@ -371,9 +308,10 @@ for tok in doc:
 # Convertir a dataframe
 vectors_df =  pd.DataFrame(vectors)
 
-
-
 ```
+
+
+
 
 
 ## Resultado
@@ -441,14 +379,60 @@ fig
 
 ```
 
-## Reticulate: más ejemplos
+## Palabras más cercanas
+
+
+```{python, echo = T}
+from scipy.spatial.distance import cosine
+
+def palabra_mas_cercana(vector_objetivo, vocabulario):
+    palabra_cercana = None
+    menor_distancia = float("inf")
+    for palabra in vocabulario:
+        vector = nlp.vocab[palabra].vector
+        if vector.any() and sum(vector_objetivo == vector) != 300:  # Ignorar palabras sin vector
+            distancia = cosine(vector_objetivo, vector)
+            if distancia < menor_distancia :
+                menor_distancia = distancia
+                palabra_cercana = palabra
+    return palabra_cercana, menor_distancia
+
+# Vocabulario a comparar (puedes usar una lista específica o todo nlp.vocab)
+vocabulario = list(nlp.vocab.strings)
+
+
+# Elegir una palabra
+word = "ropa"
+vector =  nlp(word).vector
+
+# Encontrar la palabra más cercana al vector resultante
+closest_word, distance = palabra_mas_cercana(vector, vocabulario)
+print(f"La palabra más cercana a {word} es {closest_word}, con similitud {distance}")
+```
+
+
+## Comentario spacy
+
+Los embeddings de spacy son muy livianos y fáciles de usar
+
+. . .
+
+No son tan poderosos
+
+. . .
+
+Gensim tiene mejores embeddings (4 GB)
+
+
+
+## Paréntesis de Reticulate: más ejemplos
 
 ::: panel-tabset
 
 ## instalando paquetes
 
 ```{r, eval=FALSE, echo=TRUE}
-reticulate::virtualenv_install(paste0(getwd(), "/venv"), "pandas")
+reticulate::virtualenv_install("taller-nlp", "pandas")
 ```
 
 
@@ -487,7 +471,7 @@ sumar(3, 5)
 
 ## Usemos los vectores
 
-Usaremos los vectores de *spacy* para procesar las noticias (videos enviados)
+Usaremos los vectores de *spacy* para procesar las noticias
 
 . . .
 
@@ -598,9 +582,6 @@ Tenemos un vector para cada palabra
 
 ![](https://media.giphy.com/media/UP9ItQNj52DsM3e29m/giphy.gif){fig-align="center" width="200px"}
 
-
-
-. . .
 
 Una manera es calcular la media de cada una de las 300 dimensiones
 
@@ -806,6 +787,10 @@ x <- data$cuerpo # noticias
 # Generar embeddings de 300 dimensiones
 model <- word2vec(x = x, dim = 300, iter = 20, min_count = 5, threads = 16)
 
+# Guardamos el modelo 
+write.word2vec(model, "data/news_vectors_300.bin")
+
+
 # Crear una matriz
 embedding <- as.matrix(model)
 
@@ -834,7 +819,37 @@ cercanos %>%
 
 ## Análisis de sentimiento: breve historia
 
-BERT: Bidirectional Encoder Representations from Transformers
+Estado del arte: Transformers
+
+. . .
+
+Bolsa de palabras (clase anterior)
+- BOW
+- DFM
+- TF-IDF
+
+
+
+## Análisis de sentimiento: breve historia
+
+
+Matriz de co-ocurrencia y cadenas de Markov
+
+```{r}
+library(quanteda)
+
+tokens_gato <- tokens(c("Mi gato es un tirano. Él es amo 
+                  y señor de la casa"))
+fcm(tokens_gato, context = "window", window = 2)
+
+```
+
+
+## Análisis de sentimiento: breve historia
+
+Red *feed fordward*
+
+- Varios defectos para procesamiento de texto
 
 . . .
 
@@ -863,6 +878,9 @@ Término técnico: desvanecimiento del gradiente
 - GRU: Gated Recurrent Unit 
 - LSTM: Long Short Term Memory
 
+. . .
+
+Embeddings (Mikolov et al, 2013)
 
 . . .
 
@@ -877,6 +895,16 @@ Término técnico: desvanecimiento del gradiente
 - Eliminan la recurrencia y solo usan mecanismo de atención
 - Esto se puede paralelizar
 - Aumenta la cantidad de datos
+
+
+. . .
+
+**Grandes modelos de lenguaje (>2018)**
+
+- GPT1 - 2 - 3 - 4
+- Gemini
+- Llama
+
 
 
 ## Análisis de sentimiento
@@ -1012,7 +1040,10 @@ data %>%
 
 - Podemos articular ambos lenguajes a través de `reticulate` 
 
-
+* A veces, lo más sencillo es separar las tareas entre R y python
+  + Creamos el dataset con R y guardamos un archivo (csv o parquet) 
+  + Abrimos el archivo con Python
+  + Ejecutamos el modelo de Huggingface
 
 
 # Métodos computacionales para las ciencias sociales {.center background-color="aquamarine"}
