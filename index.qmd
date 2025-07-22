@@ -824,6 +824,7 @@ Estado del arte: Transformers
 . . .
 
 Bolsa de palabras (clase anterior)
+
 - BOW
 - DFM
 - TF-IDF
@@ -1015,6 +1016,124 @@ data %>%
   kable_styling(font_size = 20)
   
 ```
+
+
+## Ejemplo final: datamedios
+
+**Queremos ver cómo cambian los sentimientos de los títulos de las noticias a lo largo del tiempo**
+
+. . .
+
+Cargamos el archivo
+
+```{r}
+directorio <- "/home/klaus/proyectos-personales/analizar_noticias/articulo/data/"
+```
+
+```{r cargar noticias, echo=TRUE}
+library(arrow)
+library(dplyr)
+
+noticias <- read_parquet( paste0(directorio, "noticias_respaldo.parquet"), as_data_frame = F )
+
+```
+
+## Ejemplo final: datamedios
+
+Miremos rápidamente qué contiene
+
+```{r, echo=TRUE}
+rows <- noticias |> 
+  summarize(total = n()) |> 
+  collect()
+
+print(sprintf("El archivo contiene %s filas", rows))
+print(names(noticias))
+```
+
+. . .
+
+```{r, echo=TRUE}
+noticias |> 
+  head(10) |> 
+  collect() |> 
+  DT::datatable()
+```
+
+
+## Ejemplo final: datamedios
+
+Haremos la predicción de sentimiento para los primeros 10 títulos
+
+```{r, echo=TRUE}
+first_rows = noticias |> 
+  head(10) |> 
+  collect()
+
+# Predicciones
+out <-  map(first_rows$titulo, classifier)
+
+# Extraer la etiqueta de cada predicción
+labels <- flatten(out) %>%
+  map_chr(1)
+
+```
+
+
+## Ejemplo final: datamedios
+
+Imaginemos que ya hicimos la predicción para todos los títulos a nivel de mes
+
+```{r, echo=TRUE}
+library(readr)
+sentimientos <- read_csv("data/datamedios_sentimiento.csv")
+sentimientos |> 
+  select(medio, periodo, pct_POS, pct_NEG, pct_NEU) |> 
+  head()
+
+```
+
+
+## Ejemplo final: datamedios
+
+::: panel-tabset
+
+## Procesamiento
+
+Pequeño procesamiento
+
+```{r, echo=TRUE}
+data_plot <- sentimientos |> 
+  select(medio, periodo, pct_POS, pct_NEG, pct_NEU) |> 
+  tidyr::pivot_longer(cols = c("pct_POS", "pct_NEG", "pct_NEU" ), 
+                      names_to = "sentimiento",
+                    values_to = "porcentaje" ) |> 
+  filter(periodo >= "2010-01" ) |> 
+  mutate(periodo = as.Date(paste0(periodo, "-01"))) 
+
+```
+
+
+## gráfico
+
+```{r, echo=TRUE}
+library(ggplot2)
+library(plotly)
+
+p <- data_plot |> 
+  ggplot(aes(x = periodo, y = porcentaje, group = sentimiento, color = sentimiento)) +
+  geom_line() +
+  facet_wrap(~medio, ncol = 1) +
+  scale_x_date(date_breaks = "3 months", date_labels = "%Y-%m") +
+  theme(axis.text.x = element_text(angle = 90))
+
+ggplotly(p)
+
+```
+
+:::
+
+
 
 
 ## Algunos comentarios
