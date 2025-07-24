@@ -890,7 +890,7 @@ $$
 
 ## step function
 
-![](imagenes/step-function.png){fig-align="center" width="500"}
+![](imagenes/step_function.png){fig-align="center" width="500"}
 
 ## Sigmoid
 
