@@ -94,6 +94,33 @@ Para un humano esto es trivial, pero para un computador es muy difícil
 
 Podemos entrenar a una red neuronal para que aprenda vectores de palabras  
 
+
+## Antes, un poco de historia
+
+
+Todo comenzó con enfoques tipo bolsa de palabras (clase anterior)
+
+- BOW
+- DFM
+- TF-IDF
+
+
+
+## Antes, un poco de historia
+
+
+Matriz de co-ocurrencia, reducción de dimensionalidad y cadenas de Markov
+
+```{r}
+library(quanteda)
+
+tokens_gato <- tokens(c("Mi gato es un tirano. Él es amo 
+                  y señor de la casa"))
+fcm(tokens_gato, context = "window", window = 2)
+
+```
+
+
 ## Artículo clave (Mikolov et al, 2013)
 
 Efficient Estimation of Word Representations in Vector Space
@@ -817,40 +844,103 @@ cercanos %>%
 
 ```
 
-## Análisis de sentimiento: breve historia
-
-Estado del arte: Transformers
-
-. . .
-
-Bolsa de palabras (clase anterior)
-
-- BOW
-- DFM
-- TF-IDF
+# Análisis de sentimiento {.center background-color="aquamarine"}
 
 
 
 ## Análisis de sentimiento: breve historia
 
+![](imagenes/neurona.jpg){fig-align="center" width="800"}
 
-Matriz de co-ocurrencia y cadenas de Markov
 
-```{r}
-library(quanteda)
 
-tokens_gato <- tokens(c("Mi gato es un tirano. Él es amo 
-                  y señor de la casa"))
-fcm(tokens_gato, context = "window", window = 2)
 
-```
+
+## Análisis de sentimiento: breve historia
+
+
+::: panel-tabset
+
+## Perceptrón
+
+![](imagenes/perceptron.png){fig-align="center" width="500"}
+$$
+\text{output} =
+\begin{cases}
+0 & \text{si } \sum_j w_j x_j \leq \text{umbral} \\
+1 & \text{si } \sum_j w_j x_j > \text{umbral}
+\end{cases}
+\tag{1}
+$$
+
+
+## Bias
+
+
+$$
+\text{output} =
+\begin{cases}
+0 & \text{si } \mathbf{w} \cdot \mathbf{x} + b \leq 0 \\
+1 & \text{si } \mathbf{w} \cdot \mathbf{x} + b > 0
+\end{cases}
+\tag{2}
+$$
+
+**Bias**: Qué tan fácil es que el output sea 1. 
+
+## step function
+
+![](imagenes/step-function.png){fig-align="center" width="500"}
+
+## Sigmoid
+
+![](imagenes/sigmoid-function.png){fig-align="center" width="500"}
+
+## Funciones activación
+
+![](imagenes/activation-functions.png){fig-align="center" width="800"}
+
+:::
 
 
 ## Análisis de sentimiento: breve historia
 
 Red *feed fordward*
 
-- Varios defectos para procesamiento de texto
+![](imagenes/feed-forward.png){fig-align="center" width="800"}
+
+
+## Análisis de sentimiento: breve historia
+
+![](imagenes/neurona-ejemplo.png){fig-align="center" width="900"}
+
+## Análisis de sentimiento: breve historia
+
+Las redes feed forward son extremadamente poderosas 
+
+. . .
+
+**Teorema de aproximación universal**:
+
+- Una red de una capa oculta puede aprender cualquier función continua
+
+. . .
+
+- Podemos aproximarnos cuánto queramos 
+
+. . .
+
+$\varepsilon$: precisión deseada
+
+Para una red con *output* $g(x)$, siempre se puede satisfacer la condición
+$$
+|g(x) - f(x)| < \varepsilon
+$$
+
+
+## Análisis de sentimiento: breve historia
+
+- Las redes feed forward son extraordinarias, pero tienen defectos para procesamiento de texto
 
 . . .
 
