@@ -694,6 +694,8 @@ textos_originales <- representations2 %>%
 ```
 
 
+
+
 ## Buscando tópicos
 
 
@@ -788,6 +790,75 @@ crear_tabla(x)
 ```
 
 :::
+
+## Ejemplo real
+
+![](imagenes/paper_embeddings_aplicado.png){fig-align="center" width="600px"}
+
+. . .
+
+Los embeddings capturan todos los sesgos lingüísticos de una sociedad
+
+. . .
+
+**¿Cuál es la correlación entre el sesgo de los embeddings y los sesgos en el mercado del trabajo?**
+
+## Ejemplo real
+
+Pasos:
+
+- Seleccionamos listados de palabras femeninas (woman, she, her, etc) y masculinas (man, he, his, etc)
+
+. . .
+
+- Calculamos la distancia de cada palabra (woman, man, etc) respecto a un listado neutro de palabras (nurse, engineer, secretary, etc)
+
+
+```{mermaid}
+flowchart LR
+  woman --> nurse
+  she   --> nurse
+  her   --> nurse
+```
+
+
+```{mermaid}
+flowchart LR
+  man --> nurse
+  he   --> nurse
+  hir   --> nurse
+```
+
+
+## Ejemplo real
+
+- Calculamos la distancia media para el listado de hombres y mujeres  
+
+
+$$\text{mean_dist}_{js} = \frac{1}{N} \sum_{i=1}^{N} \text{dist}_{ijs}$$
+
+## Ejemplo real
+
+- Calculamos un sesgo 
+
+$$bias_j = \text{mean_dist}_{jw} - \text{mean_dist}_{jm} $$
+
+Si el valor es negativo, significa que hay un sesgo hacia los hombres
+
+
+
+## Ejemplo real
+
+![](imagenes/scatter_bias.png){fig-align="center" width="800px"}
+
+
+## Ejemplo real
+
+![](imagenes/line_plot.png){fig-align="center" width="800px"}
+
+
+
+
 
 ## Nuestros propios embeddings
 

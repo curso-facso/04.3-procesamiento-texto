@@ -2,3 +2,6 @@ data/
 venv/
 .Rhistory
 .Rproj.user/
+test.html
+test.qmd
+test_files/
