@@ -1140,6 +1140,16 @@ menciones_eta %>%
 
 ```
 
+## Estado del arte
+
+[Embeddings nvidia](https://huggingface.co/nvidia/llama-embed-nemotron-8b) 
+
+4096 dimensiones
+
+Se requieren ~30GB de memoria para cargarlos
+
+[Artículo](https://arxiv.org/abs/2405.17428)
+
 ## Predicciones con huggingface
 
 ```{r, echo=TRUE}
