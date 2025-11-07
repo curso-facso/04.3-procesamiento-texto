@@ -356,8 +356,6 @@ print(unlist(vectores[1, ]))
 :::
 
 
-
-
 ## Word embeddings
 
 
@@ -417,7 +415,7 @@ def palabra_mas_cercana(vector_objetivo, vocabulario):
     menor_distancia = float("inf")
     for palabra in vocabulario:
         vector = nlp.vocab[palabra].vector
-        if vector.any() and sum(vector_objetivo == vector) != 300:  # Ignorar palabras sin vector
+        if vector.any() and sum(vector_objetivo == vector) != 300:  # Ignorar palabras sin vector y también la misma palabra
             distancia = cosine(vector_objetivo, vector)
             if distancia < menor_distancia :
                 menor_distancia = distancia
@@ -508,6 +506,7 @@ Usaremos los vectores de *spacy* para procesar las noticias
 2. Convertir las oraciones en vectores
 3. Buscar algunos tópicos, utilizando similitud coseno
 
+Datos [acá](https://1drv.ms/u/c/3ba457a6b989f5e0/EWI1LiXfz6hPi6dtiW9ZEe8By2x1nizOr4aWF5s7TlUJNQ?e=SaUHmw)
 
 ## Aplicando lo aprendido
 
@@ -656,11 +655,14 @@ saveRDS(representations, "data/vector_representation_sample.rds")
 
 ## Cargar información
 
+Datos procesados [acá](https://1drv.ms/f/c/3ba457a6b989f5e0/Er0nddLoXZROlxlsEFwm84MBjbxzjBcsiEd8ip54BGxg5w?e=V3Ut3C)
 
 ```{r, echo=TRUE}
 representations <- readRDS("data/vector_representation_sample.rds")
 print(representations[[1]][1] %>% unlist() %>% unname() %>% as.numeric())
 print(representations[[1]][2])
+print(representations[[1]][3])
+
 
 ```
 
@@ -670,14 +672,14 @@ print(representations[[1]][2])
 ```{r cargar representaciones, echo=TRUE}
 
 # Agregar oraciones originales a la lista
-representations <- map2(oraciones_muestra_originales, representations, ~append(.y, .x))
+representations <- map2(representations, oraciones_muestra_originales , ~append(.x, .y))
 
 # Eliminar textos sin representación y con menos de 4 palabras
 representations2 <- representations %>%
   keep(~!is_empty(.x[[1]])) %>% # sacar las oraciones sin representación  
   keep(~.x[3] > 4) # sacar textos con pocas palabras
 
-# Guardamos los vectores
+# Guardamos los vectores de todos los textos
 vectores <- representations2 %>% 
   map(1) %>% 
   map(~unlist(unname(.x)))  
